@@ -18,31 +18,55 @@ interface WaitlistDialogProps {
 
 const WaitlistDialog = ({ open, setOpen }: WaitlistDialogProps) => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setHasSubmitted(true);
+    try {
+      // Create form data to send to SystemIO
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('surname', name);
+
+      // Send form data to SystemIO endpoint
+      const response = await fetch('https://systeme.io/embedded/29454593/subscription', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        setHasSubmitted(true);
+        toast({
+          title: "Success!",
+          description: "You've been added to our waiting list.",
+          duration: 5000,
+        });
+        
+        // Reset after a while
+        setTimeout(() => {
+          setOpen(false);
+          setHasSubmitted(false);
+          setEmail("");
+          setName("");
+        }, 2000);
+      } else {
+        throw new Error("Submission failed");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
       toast({
-        title: "Success!",
-        description: "You've been added to our waiting list.",
+        title: "Submission failed",
+        description: "Please try again later.",
+        variant: "destructive",
         duration: 5000,
       });
-      
-      // Reset after a while
-      setTimeout(() => {
-        setOpen(false);
-        setHasSubmitted(false);
-        setEmail("");
-      }, 2000);
-    }, 1500);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,6 +90,17 @@ const WaitlistDialog = ({ open, setOpen }: WaitlistDialogProps) => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Input
+                id="name"
+                placeholder="Your name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="h-12"
+              />
+            </div>
             <div className="space-y-2">
               <Input
                 id="email"
