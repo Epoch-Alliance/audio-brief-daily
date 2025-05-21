@@ -1,5 +1,9 @@
 name: Deploy Vite site to GH Pages
 
+# 1) Give the job permission to push
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -8,8 +12,14 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # 2) Checkout with full history and creds
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
